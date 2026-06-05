@@ -10,6 +10,7 @@ const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const db_1 = require("./config/db");
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
@@ -40,6 +41,7 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use(limiter);
+app.use('/downloads', express_1.default.static(path_1.default.join(process.cwd(), 'downloads')));
 // API Routes
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/notes', notesRoutes_1.default);
@@ -49,6 +51,15 @@ app.use('/share', shareRoutes_1.default);
 // Health Check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date() });
+});
+// App Release Version Info (For Client Auto-Updates)
+app.get('/api/version', (req, res) => {
+    res.json({
+        latestVersion: process.env.LATEST_VERSION || '1.0.4',
+        downloadUrl: process.env.DOWNLOAD_URL || 'https://sweetnotes-k7si.onrender.com/downloads/SweetNotesSetup.exe',
+        mandatory: process.env.UPDATE_MANDATORY === 'true',
+        releaseNotes: process.env.RELEASE_NOTES || 'Performance fixes, secure MongoDB logs, and custom status gateways.'
+    });
 });
 // Root API Status Landing Page
 app.get('/', (req, res) => {
