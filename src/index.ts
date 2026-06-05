@@ -6,6 +6,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
 import rateLimit from 'express-rate-limit';
 import { connectDB } from './config/db';
 import authRoutes from './routes/authRoutes';
@@ -41,6 +42,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
+app.use('/downloads', express.static(path.join(process.cwd(), 'downloads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -52,6 +54,16 @@ app.use('/share', shareRoutes);
 // Health Check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date() });
+});
+
+// App Release Version Info (For Client Auto-Updates)
+app.get('/api/version', (req, res) => {
+  res.json({
+    latestVersion: process.env.LATEST_VERSION,
+    downloadUrl: process.env.DOWNLOAD_URL,
+    mandatory: process.env.UPDATE_MANDATORY === 'true',
+    releaseNotes: process.env.RELEASE_NOTES
+  });
 });
 
 // Root API Status Landing Page
