@@ -1,0 +1,19 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = require("../middleware/auth");
+const teamController_1 = require("../controllers/teamController");
+const router = (0, express_1.Router)();
+// Apply auth middleware to all team routes
+router.use(auth_1.authenticateToken);
+router.post('/', teamController_1.createTeam);
+router.get('/', teamController_1.getTeams);
+router.post('/join', teamController_1.joinTeam);
+router.get('/:id', teamController_1.getTeamDetails);
+router.post('/:id/leave', teamController_1.leaveTeam);
+router.post('/:id/delete', teamController_1.deleteTeam);
+router.patch('/:id/members/:memberUserId', teamController_1.updateMemberPermission);
+router.post('/:id/kick/:memberUserId', teamController_1.kickMember);
+router.post('/:id/ban/:memberUserId', teamController_1.banMember);
+router.get('/:id/logs', teamController_1.getTeamLogs);
+exports.default = router;
