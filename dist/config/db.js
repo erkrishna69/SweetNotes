@@ -8,7 +8,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
     try {
         const connUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sweetnotes';
-        console.log(`Connecting to MongoDB ;
+        console.log('Connecting to MongoDB...');
         await mongoose_1.default.connect(connUri);
         console.log('MongoDB Connected successfully.');
     }
