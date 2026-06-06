@@ -161,6 +161,14 @@ export const saveNote = async (req: AuthenticatedRequest, res: Response) => {
           }
         }
       }
+      const io = req.app.get('io');
+      if (io) {
+        if (existingNote.teamId) {
+          io.to(`team:${existingNote.teamId.toString()}`).emit('note:sync', existingNote);
+        } else {
+          io.to(userId!).emit('note:sync', existingNote);
+        }
+      }
       return res.status(200).json(existingNote);
     } else {
       // Verify permissions for new note in team
@@ -194,6 +202,14 @@ export const saveNote = async (req: AuthenticatedRequest, res: Response) => {
         );
       }
 
+      const io = req.app.get('io');
+      if (io) {
+        if (newNote.teamId) {
+          io.to(`team:${newNote.teamId.toString()}`).emit('note:sync', newNote);
+        } else {
+          io.to(userId!).emit('note:sync', newNote);
+        }
+      }
       return res.status(201).json(newNote);
     }
   } catch (error) {
@@ -236,6 +252,14 @@ export const deleteNote = async (req: AuthenticatedRequest, res: Response) => {
       );
     }
 
+    const io = req.app.get('io');
+    if (io) {
+      if (note.teamId) {
+        io.to(`team:${note.teamId.toString()}`).emit('note:sync', note);
+      } else {
+        io.to(userId!).emit('note:sync', note);
+      }
+    }
     return res.status(200).json({ message: 'Note soft-deleted successfully', note });
   } catch (error) {
     console.error('Delete note error:', error);
