@@ -27,6 +27,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   },
 });
+app.set('io', io);
 
 // Configure Rate Limiting
 const limiter = rateLimit({
