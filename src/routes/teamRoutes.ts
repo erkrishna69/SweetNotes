@@ -11,6 +11,7 @@ import {
   kickMember,
   banMember,
   deleteTeam,
+  generateInvite,
 } from '../controllers/teamController';
 
 const router = Router();
@@ -25,6 +26,7 @@ router.post('/join', joinTeam as any);
 router.get('/:id', getTeamDetails as any);
 router.post('/:id/leave', leaveTeam as any);
 router.post('/:id/delete', deleteTeam as any);
+router.post('/:id/invites', generateInvite as any);
 router.patch('/:id/members/:memberUserId', updateMemberPermission as any);
 router.post('/:id/kick/:memberUserId', kickMember as any);
 router.post('/:id/ban/:memberUserId', banMember as any);
