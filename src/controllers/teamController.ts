@@ -212,13 +212,11 @@ export const generateInvite = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if user is owner or admin
+    // Only the team owner can generate invite codes
     const isOwner = team.ownerId.toString() === userId;
-    const member = team.members.find((m) => m.userId.toString() === userId);
-    const isAdmin = member?.role === 'admin';
 
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({ message: 'Only team owner or admin can generate invite codes.' });
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Only the team owner can generate invite codes.' });
     }
 
     // Generate unique code
