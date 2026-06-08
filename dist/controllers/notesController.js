@@ -129,6 +129,15 @@ const saveNote = async (req, res) => {
                     }
                 }
             }
+            const io = req.app.get('io');
+            if (io) {
+                if (existingNote.teamId) {
+                    io.to(`team:${existingNote.teamId.toString()}`).emit('note:sync', existingNote);
+                }
+                else {
+                    io.to(userId).emit('note:sync', existingNote);
+                }
+            }
             return res.status(200).json(existingNote);
         }
         else {
@@ -154,6 +163,15 @@ const saveNote = async (req, res) => {
             // Audit Logging
             if (teamId) {
                 await (0, teamController_1.logAuditEvent)(teamId, userId, 'NOTE_CREATED', `${username} created note "${title || 'Untitled'}".`);
+            }
+            const io = req.app.get('io');
+            if (io) {
+                if (newNote.teamId) {
+                    io.to(`team:${newNote.teamId.toString()}`).emit('note:sync', newNote);
+                }
+                else {
+                    io.to(userId).emit('note:sync', newNote);
+                }
             }
             return res.status(201).json(newNote);
         }
@@ -186,6 +204,15 @@ const deleteNote = async (req, res) => {
         // Audit Logging
         if (note.teamId) {
             await (0, teamController_1.logAuditEvent)(note.teamId.toString(), userId, 'NOTE_DELETED', `${username} deleted note "${note.title || 'Untitled'}".`);
+        }
+        const io = req.app.get('io');
+        if (io) {
+            if (note.teamId) {
+                io.to(`team:${note.teamId.toString()}`).emit('note:sync', note);
+            }
+            else {
+                io.to(userId).emit('note:sync', note);
+            }
         }
         return res.status(200).json({ message: 'Note soft-deleted successfully', note });
     }

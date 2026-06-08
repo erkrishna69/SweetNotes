@@ -26,6 +26,27 @@ const TeamMemberSchema = new mongoose_1.Schema({
         default: false,
     },
 }, { _id: false });
+const TeamInviteSchema = new mongoose_1.Schema({
+    code: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+    },
+    createdBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    maxUses: {
+        type: Number,
+        default: 1,
+    },
+    uses: {
+        type: Number,
+        default: 0,
+    },
+}, { timestamps: { createdAt: true, updatedAt: false } });
 const TeamSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -45,6 +66,7 @@ const TeamSchema = new mongoose_1.Schema({
         index: true,
     },
     members: [TeamMemberSchema],
+    invites: [TeamInviteSchema],
     bannedUsers: [
         {
             type: mongoose_1.Schema.Types.ObjectId,

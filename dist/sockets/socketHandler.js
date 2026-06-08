@@ -8,6 +8,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Note_1 = require("../models/Note");
 const Device_1 = require("../models/Device");
 const Team_1 = require("../models/Team");
+const User_1 = require("../models/User");
+const teamController_1 = require("../controllers/teamController");
 const JWT_SECRET = process.env.JWT_SECRET || 'sweetnotes_jwt_secret_key';
 const verifySocketWritePermission = async (userId, teamId, existingNoteOwnerId) => {
     if (!teamId) {
@@ -127,6 +129,9 @@ const setupSocketHandlers = (io) => {
                     }
                     // Conflict resolution: Last-Write-Wins
                     if (clientDate > existingNote.clientUpdatedAt) {
+                        const titleChanged = title !== undefined && title !== existingNote.title;
+                        const contentChanged = content !== undefined && content !== existingNote.content;
+                        const oldTeamId = existingNote.teamId;
                         existingNote.title = title !== undefined ? title : existingNote.title;
                         existingNote.content = content !== undefined ? content : existingNote.content;
                         existingNote.isDeleted = isDeleted !== undefined ? isDeleted : existingNote.isDeleted;
@@ -136,6 +141,20 @@ const setupSocketHandlers = (io) => {
                         existingNote.sharedWith = sharedWith !== undefined ? sharedWith : existingNote.sharedWith;
                         existingNote.clientUpdatedAt = clientDate;
                         await existingNote.save();
+                        // Audit Logging
+                        if (existingNote.teamId) {
+                            const user = await User_1.User.findById(userId);
+                            const username = user ? user.username : 'User';
+                            if (!oldTeamId) {
+                                await (0, teamController_1.logAuditEvent)(existingNote.teamId.toString(), userId, 'NOTE_SHARED', `${username} shared note "${existingNote.title || 'Untitled'}" with the team.`);
+                            }
+                            else if (deleteStatusChanged && isDeleted) {
+                                await (0, teamController_1.logAuditEvent)(existingNote.teamId.toString(), userId, 'NOTE_DELETED', `${username} deleted note "${existingNote.title || 'Untitled'}".`);
+                            }
+                            else if (titleChanged || contentChanged) {
+                                await (0, teamController_1.logAuditEvent)(existingNote.teamId.toString(), userId, 'NOTE_UPDATED', `${username} updated note "${existingNote.title || 'Untitled'}".`);
+                            }
+                        }
                         // Broadcast changes
                         if (existingNote.teamId) {
                             socket.to(`team:${existingNote.teamId.toString()}`).emit('note:sync', existingNote);
@@ -166,6 +185,12 @@ const setupSocketHandlers = (io) => {
                         clientUpdatedAt: clientDate,
                     });
                     await newNote.save();
+                    // Audit Logging
+                    if (teamId) {
+                        const user = await User_1.User.findById(userId);
+                        const username = user ? user.username : 'User';
+                        await (0, teamController_1.logAuditEvent)(teamId, userId, 'NOTE_CREATED', `${username} created note "${title || 'Untitled'}".`);
+                    }
                     // Broadcast
                     if (newNote.teamId) {
                         socket.to(`team:${newNote.teamId.toString()}`).emit('note:sync', newNote);

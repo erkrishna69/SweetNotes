@@ -20,6 +20,7 @@ const socketHandler_1 = require("./sockets/socketHandler");
 const shareRoutes_1 = __importDefault(require("./routes/shareRoutes"));
 const teamRoutes_1 = __importDefault(require("./routes/teamRoutes"));
 const app = (0, express_1.default)();
+app.set('trust proxy', 1);
 const server = http_1.default.createServer(app);
 // Enable Socket.IO
 const io = new socket_io_1.Server(server, {
@@ -28,6 +29,7 @@ const io = new socket_io_1.Server(server, {
         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     },
 });
+app.set('io', io);
 // Configure Rate Limiting
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -55,10 +57,10 @@ app.get('/health', (req, res) => {
 // App Release Version Info (For Client Auto-Updates)
 app.get('/api/version', (req, res) => {
     res.json({
-        latestVersion: process.env.LATEST_VERSION || '1.0.4',
-        downloadUrl: process.env.DOWNLOAD_URL || 'https://sweetnotes-k7si.onrender.com/downloads/SweetNotesSetup.exe',
+        latestVersion: process.env.LATEST_VERSION,
+        downloadUrl: process.env.DOWNLOAD_URL,
         mandatory: process.env.UPDATE_MANDATORY === 'true',
-        releaseNotes: process.env.RELEASE_NOTES || 'Performance fixes, secure MongoDB logs, and custom status gateways.'
+        releaseNotes: process.env.RELEASE_NOTES
     });
 });
 // Root API Status Landing Page

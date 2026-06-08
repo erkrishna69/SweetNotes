@@ -12,6 +12,7 @@ router.post('/join', teamController_1.joinTeam);
 router.get('/:id', teamController_1.getTeamDetails);
 router.post('/:id/leave', teamController_1.leaveTeam);
 router.post('/:id/delete', teamController_1.deleteTeam);
+router.post('/:id/invites', teamController_1.generateInvite);
 router.patch('/:id/members/:memberUserId', teamController_1.updateMemberPermission);
 router.post('/:id/kick/:memberUserId', teamController_1.kickMember);
 router.post('/:id/ban/:memberUserId', teamController_1.banMember);
