@@ -8,11 +8,20 @@ export interface ITeamMember {
   canViewAuditLogs: boolean;
 }
 
+export interface ITeamInvite {
+  code: string;
+  createdBy: Types.ObjectId | string;
+  maxUses: number;
+  uses: number;
+  createdAt: Date;
+}
+
 export interface ITeam extends Document {
   name: string;
   ownerId: Types.ObjectId | string;
   inviteCode: string;
   members: ITeamMember[];
+  invites: ITeamInvite[];
   bannedUsers: (Types.ObjectId | string)[];
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +55,31 @@ const TeamMemberSchema = new Schema<ITeamMember>(
   { _id: false }
 );
 
+const TeamInviteSchema = new Schema<ITeamInvite>(
+  {
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    maxUses: {
+      type: Number,
+      default: 1,
+    },
+    uses: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+
 const TeamSchema = new Schema<ITeam>(
   {
     name: {
@@ -66,6 +100,7 @@ const TeamSchema = new Schema<ITeam>(
       index: true,
     },
     members: [TeamMemberSchema],
+    invites: [TeamInviteSchema],
     bannedUsers: [
       {
         type: Schema.Types.ObjectId,
