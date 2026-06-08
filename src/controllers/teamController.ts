@@ -228,9 +228,15 @@ export const updateMemberPermission = async (req: AuthenticatedRequest, res: Res
       return res.status(404).json({ message: 'Member not found in team' });
     }
 
-    const { canWriteNotes, canDeleteNotes, canViewAuditLogs } = req.body;
+    const { canWriteNotes, canDeleteNotes, canViewAuditLogs, role } = req.body;
 
     const changes: string[] = [];
+    if (role !== undefined && role !== member.role) {
+      if (role === 'admin' || role === 'member') {
+        member.role = role as any;
+        changes.push(`Role: ${role}`);
+      }
+    }
     if (canWriteNotes !== undefined && canWriteNotes !== member.canWriteNotes) {
       member.canWriteNotes = canWriteNotes;
       changes.push(`WriteNotes: ${canWriteNotes}`);
