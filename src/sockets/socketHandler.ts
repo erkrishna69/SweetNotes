@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { Note } from '../models/Note';
 import { Device } from '../models/Device';
 import { Team } from '../models/Team';
+import { User } from '../models/User';
+import { logAuditEvent } from '../controllers/teamController';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sweetnotes_jwt_secret_key';
 
@@ -152,6 +154,10 @@ export const setupSocketHandlers = (io: Server) => {
 
           // Conflict resolution: Last-Write-Wins
           if (clientDate > existingNote.clientUpdatedAt) {
+            const titleChanged = title !== undefined && title !== existingNote.title;
+            const contentChanged = content !== undefined && content !== existingNote.content;
+            const oldTeamId = existingNote.teamId;
+
             existingNote.title = title !== undefined ? title : existingNote.title;
             existingNote.content = content !== undefined ? content : existingNote.content;
             existingNote.isDeleted = isDeleted !== undefined ? isDeleted : existingNote.isDeleted;
@@ -161,6 +167,34 @@ export const setupSocketHandlers = (io: Server) => {
             existingNote.sharedWith = sharedWith !== undefined ? sharedWith : existingNote.sharedWith;
             existingNote.clientUpdatedAt = clientDate;
             await existingNote.save();
+
+            // Audit Logging
+            if (existingNote.teamId) {
+              const user = await User.findById(userId);
+              const username = user ? user.username : 'User';
+              if (!oldTeamId) {
+                await logAuditEvent(
+                  existingNote.teamId.toString(),
+                  userId,
+                  'NOTE_SHARED',
+                  `${username} shared note "${existingNote.title || 'Untitled'}" with the team.`
+                );
+              } else if (deleteStatusChanged && isDeleted) {
+                await logAuditEvent(
+                  existingNote.teamId.toString(),
+                  userId,
+                  'NOTE_DELETED',
+                  `${username} deleted note "${existingNote.title || 'Untitled'}".`
+                );
+              } else if (titleChanged || contentChanged) {
+                await logAuditEvent(
+                  existingNote.teamId.toString(),
+                  userId,
+                  'NOTE_UPDATED',
+                  `${username} updated note "${existingNote.title || 'Untitled'}".`
+                );
+              }
+            }
 
             // Broadcast changes
             if (existingNote.teamId) {
@@ -191,6 +225,18 @@ export const setupSocketHandlers = (io: Server) => {
             clientUpdatedAt: clientDate,
           });
           await newNote.save();
+
+          // Audit Logging
+          if (teamId) {
+            const user = await User.findById(userId);
+            const username = user ? user.username : 'User';
+            await logAuditEvent(
+              teamId,
+              userId,
+              'NOTE_CREATED',
+              `${username} created note "${title || 'Untitled'}".`
+            );
+          }
 
           // Broadcast
           if (newNote.teamId) {
