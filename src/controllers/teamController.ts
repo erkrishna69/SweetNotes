@@ -201,9 +201,8 @@ export const generateInvite = async (req: AuthenticatedRequest, res: Response) =
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
-    const { maxUses } = req.body;
-
-    const limit = parseInt(maxUses, 10);
+    const maxUsesVal = req.body.maxUses !== undefined ? req.body.maxUses : req.body.MaxUses;
+    const limit = parseInt(maxUsesVal, 10);
     if (![1, 2, 5, 10].includes(limit)) {
       return res.status(400).json({ message: 'Invalid max uses. Must be 1, 2, 5, or 10.' });
     }
