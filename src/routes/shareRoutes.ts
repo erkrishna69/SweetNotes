@@ -70,7 +70,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     if (req.query.from_webpulse !== "true") {
       const monitorId = "6a413443326d8179b44e967d";
       const monitorToken = "4001b8c505733063c2e8155e029f423fb6fb56178089bb86e54a4db7eb5fd6aa";
-      const cleanCode = note.id.toString().toLowerCase();
+      const cleanCode = note._id.toString().toLowerCase();
 
       try {
         await fetch("https://webpulse-tgcz.onrender.com/api/deeplinks", {
