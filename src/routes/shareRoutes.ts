@@ -72,24 +72,23 @@ router.get('/:id', async (req: Request, res: Response) => {
       const monitorToken = "4001b8c505733063c2e8155e029f423fb6fb56178089bb86e54a4db7eb5fd6aa";
       const cleanCode = note._id.toString().toLowerCase();
 
-      try {
-        await fetch("https://webpulse-tgcz.onrender.com/api/deeplinks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-monitor-token": monitorToken
-          },
-          body: JSON.stringify({
-            monitorId,
-            name: `Note Share - ${note.title || 'Untitled'}`,
-            path: `share/${cleanCode}`,
-            fallbackUrl: `https://sweetnotes-k7si.onrender.com/share/${cleanCode}?from_webpulse=true`,
-            code: cleanCode
-          })
-        });
-      } catch (err) {
+      // Fire and forget (register in background asynchronously to prevent blocking redirection)
+      fetch("https://webpulse-tgcz.onrender.com/api/deeplinks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-monitor-token": monitorToken
+        },
+        body: JSON.stringify({
+          monitorId,
+          name: `Note Share - ${note.title || 'Untitled'}`,
+          path: `share/${cleanCode}`,
+          fallbackUrl: `https://sweetnotes-k7si.onrender.com/share/${cleanCode}?from_webpulse=true`,
+          code: cleanCode
+        })
+      }).catch((err) => {
         console.error("Error creating deep link on WebPulse:", err);
-      }
+      });
 
       return res.redirect(`https://webpulse-tgcz.onrender.com/dl/${cleanCode}`);
     }
